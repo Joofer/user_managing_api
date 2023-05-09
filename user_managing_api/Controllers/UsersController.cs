@@ -160,8 +160,7 @@ namespace user_managing_api.Controllers
             Id = user.Id,
             Login = user.Login,
             Password = user.Password,
-            User_Group_Id = user.User_GroupId,
-            User_State_Id = user.User_StateId
+            User_Group_Id = user.User_GroupId
         };
     }
 }

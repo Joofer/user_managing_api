@@ -53,7 +53,7 @@ namespace user_managing_api.Migrations
 
                     b.HasIndex("User_StateId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("user_managing_api.Models.User_Group", b =>
@@ -74,7 +74,7 @@ namespace user_managing_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserGroups", (string)null);
+                    b.ToTable("UserGroups");
                 });
 
             modelBuilder.Entity("user_managing_api.Models.User_State", b =>
@@ -95,7 +95,7 @@ namespace user_managing_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserStates", (string)null);
+                    b.ToTable("UserStates");
                 });
 
             modelBuilder.Entity("user_managing_api.Models.User", b =>

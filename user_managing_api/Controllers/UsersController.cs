@@ -78,9 +78,7 @@ namespace user_managing_api.Controllers
         public async Task<ActionResult<User>> PostUser(DTO_User user)
         {
             var _group = await _context.UserGroups.FindAsync(user.User_Group_Id);
-            // Get Active state
-            var _state = await _context.UserStates.Where(u => u.Code == "Active").FirstOrDefaultAsync();
-            if (_group == null || _state == null) return NotFound();
+            if (_group == null) return NotFound();
             var _user = new User()
             {
                 Login = user.Login,
@@ -89,9 +87,6 @@ namespace user_managing_api.Controllers
                 CreatedDate = DateTime.UtcNow,
                 User_GroupId = _group.Id,
                 User_Group = _group,
-                // Assign Active state
-                User_StateId = _state.Id,
-                User_State = _state
             };
 
             // Check for login
@@ -105,6 +100,24 @@ namespace user_managing_api.Controllers
             try
             {
                 _context.Users.Add(_user);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                    return Problem(ex.InnerException.Message);
+                return Problem(ex.Message);
+            }
+
+            // Get Active state
+            var _state = await _context.UserStates.Where(u => u.Code == "Active").FirstOrDefaultAsync();
+            if (_state == null) return NotFound();
+            // Assign Active state
+            _user.User_StateId = _state.Id;
+            _user.User_State = _state;
+
+            try
+            {
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
@@ -150,6 +163,9 @@ namespace user_managing_api.Controllers
         private async Task<bool> LoginExists(string login) =>
             await _context.Users.Where(u => u.Login == login).Where(u => (DateTime.UtcNow - u.CreatedDate!.Value).Seconds <= 5).AnyAsync();
 
+        // Maybe this way?
+        /*private async Task<bool> AdminExists() =>
+            await _context.Users.Where(u => u.User_Group!.Code == "Admin" && u.User_State!.Code == "Active").AnyAsync();*/
         private async Task<bool> AdminExists() =>
             await _context.Users.Where(u => u.User_Group!.Code == "Admin").AnyAsync();
 

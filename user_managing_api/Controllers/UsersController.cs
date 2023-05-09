@@ -83,7 +83,6 @@ namespace user_managing_api.Controllers
             if (_group == null || _state == null) return NotFound();
             var _user = new User()
             {
-                Id = user.Id,
                 Login = user.Login,
                 Password = user.Password,
                 // Assign date
@@ -157,7 +156,6 @@ namespace user_managing_api.Controllers
         private static DTO_User ToDTO(User user) =>
         new()
         {
-            Id = user.Id,
             Login = user.Login,
             Password = user.Password,
             User_Group_Id = user.User_GroupId

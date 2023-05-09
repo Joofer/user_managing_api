@@ -30,7 +30,7 @@ namespace user_managing_api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Login")
@@ -41,16 +41,10 @@ namespace user_managing_api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<long>("User_GroupId")
+                    b.Property<long?>("User_GroupId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("User_Group_Id")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("User_StateId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("User_State_Id")
+                    b.Property<long?>("User_StateId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
@@ -59,7 +53,7 @@ namespace user_managing_api.Migrations
 
                     b.HasIndex("User_StateId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("user_managing_api.Models.User_Group", b =>
@@ -80,7 +74,7 @@ namespace user_managing_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserGroups", (string)null);
+                    b.ToTable("UserGroups");
                 });
 
             modelBuilder.Entity("user_managing_api.Models.User_State", b =>
@@ -101,22 +95,18 @@ namespace user_managing_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserStates", (string)null);
+                    b.ToTable("UserStates");
                 });
 
             modelBuilder.Entity("user_managing_api.Models.User", b =>
                 {
                     b.HasOne("user_managing_api.Models.User_Group", "User_Group")
                         .WithMany("Users")
-                        .HasForeignKey("User_GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("User_GroupId");
 
                     b.HasOne("user_managing_api.Models.User_State", "User_State")
                         .WithMany("Users")
-                        .HasForeignKey("User_StateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("User_StateId");
 
                     b.Navigation("User_Group");
 

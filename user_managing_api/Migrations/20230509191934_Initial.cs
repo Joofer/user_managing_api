@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace user_managing_api.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -48,11 +48,9 @@ namespace user_managing_api.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Login = table.Column<string>(type: "text", nullable: false),
                     Password = table.Column<string>(type: "text", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    User_Group_Id = table.Column<long>(type: "bigint", nullable: false),
-                    User_GroupId = table.Column<long>(type: "bigint", nullable: false),
-                    User_State_Id = table.Column<long>(type: "bigint", nullable: false),
-                    User_StateId = table.Column<long>(type: "bigint", nullable: false)
+                    CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    User_GroupId = table.Column<long>(type: "bigint", nullable: true),
+                    User_StateId = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -61,14 +59,12 @@ namespace user_managing_api.Migrations
                         name: "FK_Users_UserGroups_User_GroupId",
                         column: x => x.User_GroupId,
                         principalTable: "UserGroups",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Users_UserStates_User_StateId",
                         column: x => x.User_StateId,
                         principalTable: "UserStates",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(

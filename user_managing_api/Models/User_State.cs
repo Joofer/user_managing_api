@@ -1,4 +1,6 @@
-﻿namespace user_managing_api.Models
+﻿using System.Text.Json.Serialization;
+
+namespace user_managing_api.Models
 {
     public class User_State
     {
@@ -6,6 +8,6 @@
         public string Code { get; set; } = null!;
         public string Description { get; set; } = null!;
 
-        public virtual List<User> Users { get; set; } = new List<User>();
+        [JsonIgnore] public virtual ICollection<User>? Users { get; set; }
     }
 }

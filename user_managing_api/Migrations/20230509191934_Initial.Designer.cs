@@ -12,8 +12,8 @@ using user_managing_api.Models;
 namespace user_managing_api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20230508112306_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20230509191934_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,7 +33,7 @@ namespace user_managing_api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Login")
@@ -44,16 +44,10 @@ namespace user_managing_api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<long>("User_GroupId")
+                    b.Property<long?>("User_GroupId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("User_Group_Id")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("User_StateId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("User_State_Id")
+                    b.Property<long?>("User_StateId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
@@ -111,15 +105,11 @@ namespace user_managing_api.Migrations
                 {
                     b.HasOne("user_managing_api.Models.User_Group", "User_Group")
                         .WithMany("Users")
-                        .HasForeignKey("User_GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("User_GroupId");
 
                     b.HasOne("user_managing_api.Models.User_State", "User_State")
                         .WithMany("Users")
-                        .HasForeignKey("User_StateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("User_StateId");
 
                     b.Navigation("User_Group");
 

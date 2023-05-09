@@ -19,42 +19,45 @@ namespace user_managing_api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
-          if (_context.Users == null)
-          {
-              return NotFound();
-          }
-            return await _context.Users.ToListAsync();
+            return await _context.Users
+                .Include(u => u.User_Group)
+                .Include(u => u.User_State)
+                .ToListAsync();
         }
 
         // GET: api/Users/5
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(uint id)
         {
-          if (_context.Users == null)
-          {
-              return NotFound();
-          }
-            var user = await _context.Users.FindAsync(id);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return user;
+            var _user = await _context.Users.FindAsync(id);
+            if (_user == null) return NotFound();
+            await _context.Entry(_user).Reference(u => u.User_Group).LoadAsync();
+            await _context.Entry(_user).Reference(u => u.User_State).LoadAsync();
+            return _user;
         }
 
         // PUT: api/Users/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(uint id, User user)
+        public async Task<IActionResult> PutUser(uint id, DTO_User user)
         {
-            if (id != user.Id)
-            {
-                return BadRequest();
-            }
+            if (id != user.Id) return BadRequest();
 
-            _context.Entry(user).State = EntityState.Modified;
+            var _user = await _context.Users.FindAsync(id);
+            var _group = await _context.UserGroups.FindAsync(user.User_Group_Id);
+            var _state = await _context.UserStates.FindAsync(user.User_State_Id);
+            if (_user == null || _group == null || _state == null) return NotFound();
+            _user.Login = user.Login;
+            _user.Password = user.Password;
+            // CreatedDate cannot be changed
+            // _user.CreatedDate = user.CreatedDate;
+            _user.User_GroupId = _group.Id;
+            _user.User_Group = _group;
+            _user.User_StateId = _state.Id;
+            _user.User_State = _state;
+
+            // Check for admin group
+            if (_group.Code == "Admin" && await AdminExists())
+                return Problem("Another User with group 'Admin' already exists.");
 
             try
             {
@@ -63,49 +66,79 @@ namespace user_managing_api.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!UserExists(id))
-                {
                     return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
 
             return NoContent();
         }
 
         // POST: api/Users
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
+        public async Task<ActionResult<User>> PostUser(DTO_User user)
         {
-          if (_context.Users == null)
-          {
-              return Problem("Entity set 'AppDbContext.Users'  is null.");
-          }
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            var _group = await _context.UserGroups.FindAsync(user.User_Group_Id);
+            // Get Active state
+            var _state = await _context.UserStates.Where(u => u.Code == "Active").FirstOrDefaultAsync();
+            if (_group == null || _state == null) return NotFound();
+            var _user = new User()
+            {
+                Id = user.Id,
+                Login = user.Login,
+                Password = user.Password,
+                // Assign date
+                CreatedDate = DateTime.UtcNow,
+                User_GroupId = _group.Id,
+                User_Group = _group,
+                // Assign Active state
+                User_StateId = _state.Id,
+                User_State = _state
+            };
 
-            return CreatedAtAction("GetUser", new { id = user.Id }, user);
+            // Check for login
+            if (await LoginExists(_user.Login))
+                return Problem($"Another User with login '{_user.Login}' is being created.");
+
+            // Check for admin group
+            if (_group.Code == "Admin" && await AdminExists())
+                return Problem("Another User with group 'Admin' already exists.");
+
+            try
+            {
+                _context.Users.Add(_user);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                    return Problem(ex.InnerException.Message);
+                return Problem(ex.Message);
+            }
+
+            return CreatedAtAction("GetUser", new { id = _user.Id }, _user);
         }
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(uint id)
         {
-            if (_context.Users == null)
-            {
-                return NotFound();
-            }
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
+            var _user = await _context.Users.FindAsync(id);
+            if (_user == null) return NotFound();
+            _user.User_State = await _context.UserStates
+                .Where(u => u.Code == "Blocked")
+                .FirstOrDefaultAsync();
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Users.Remove(_user);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                    return Problem(ex.InnerException.Message);
+                return Problem(ex.Message);
+            }
 
             return NoContent();
         }
@@ -114,5 +147,21 @@ namespace user_managing_api.Controllers
         {
             return (_context.Users?.Any(e => e.Id == id)).GetValueOrDefault();
         }
+
+        private async Task<bool> LoginExists(string login) =>
+            await _context.Users.Where(u => u.Login == login).Where(u => (DateTime.UtcNow - u.CreatedDate!.Value).Seconds <= 5).AnyAsync();
+
+        private async Task<bool> AdminExists() =>
+            await _context.Users.Where(u => u.User_Group!.Code == "Admin").AnyAsync();
+
+        private static DTO_User ToDTO(User user) =>
+        new()
+        {
+            Id = user.Id,
+            Login = user.Login,
+            Password = user.Password,
+            User_Group_Id = user.User_GroupId,
+            User_State_Id = user.User_StateId
+        };
     }
 }

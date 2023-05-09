@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using user_managing_api.Models;
 
@@ -24,40 +19,25 @@ namespace user_managing_api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User_Group>>> GetUserGroups()
         {
-          if (_context.UserGroups == null)
-          {
-              return NotFound();
-          }
-            return await _context.UserGroups.ToListAsync();
+            return await _context.UserGroups
+                .Select(u => u)
+                .ToListAsync();
         }
 
         // GET: api/UserGroup/5
         [HttpGet("{id}")]
         public async Task<ActionResult<User_Group>> GetUser_Group(uint id)
         {
-          if (_context.UserGroups == null)
-          {
-              return NotFound();
-          }
-            var user_Group = await _context.UserGroups.FindAsync(id);
-
-            if (user_Group == null)
-            {
-                return NotFound();
-            }
-
-            return user_Group;
+            var _user_Group = await _context.UserGroups.FindAsync(id);
+            if (_user_Group == null) return NotFound();
+            return _user_Group;
         }
 
         // PUT: api/UserGroup/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser_Group(uint id, User_Group user_Group)
         {
-            if (id != user_Group.Id)
-            {
-                return BadRequest();
-            }
+            if (id != user_Group.Id) return BadRequest();
 
             _context.Entry(user_Group).State = EntityState.Modified;
 
@@ -68,29 +48,28 @@ namespace user_managing_api.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!User_GroupExists(id))
-                {
                     return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                throw;
             }
 
             return NoContent();
         }
 
         // POST: api/UserGroup
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<User_Group>> PostUser_Group(User_Group user_Group)
         {
-          if (_context.UserGroups == null)
-          {
-              return Problem("Entity set 'AppDbContext.UserGroups'  is null.");
-          }
-            _context.UserGroups.Add(user_Group);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.UserGroups.Add(user_Group);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                    return Problem(ex.InnerException.Message);
+                return Problem(ex.Message);
+            }
 
             return CreatedAtAction("GetUser_Group", new { id = user_Group.Id }, user_Group);
         }
@@ -99,18 +78,20 @@ namespace user_managing_api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser_Group(uint id)
         {
-            if (_context.UserGroups == null)
-            {
-                return NotFound();
-            }
-            var user_Group = await _context.UserGroups.FindAsync(id);
-            if (user_Group == null)
-            {
-                return NotFound();
-            }
+            var _user_Group = await _context.UserGroups.FindAsync(id);
+            if (_user_Group == null) return NotFound();
 
-            _context.UserGroups.Remove(user_Group);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.UserGroups.Remove(_user_Group);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                    return Problem(ex.InnerException.Message);
+                return Problem(ex.Message);
+            }
 
             return NoContent();
         }

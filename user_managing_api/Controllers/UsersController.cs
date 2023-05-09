@@ -37,7 +37,7 @@ namespace user_managing_api.Controllers
         }
 
         // PUT: api/Users/5
-        [HttpPut("{id}")]
+        /*[HttpPut("{id}")]
         public async Task<IActionResult> PutUser(uint id, DTO_User user)
         {
             if (id != user.Id) return BadRequest();
@@ -71,7 +71,7 @@ namespace user_managing_api.Controllers
             }
 
             return NoContent();
-        }
+        }*/
 
         // POST: api/Users
         [HttpPost]
